@@ -18,8 +18,8 @@ SERVICES_PRINTER()
 
   SERVICES_NAME_RESULT=$($PSQL "SELECT service_id, name FROM services")
   echo "$SERVICES_NAME_RESULT" | while read SERVICE_ID BAR NAME
-  do 
-      echo "$SERVICE_ID) $NAME"
+  do
+    echo "$SERVICE_ID) $NAME"
   done
 
   SERVICES_CHOOSER
@@ -53,31 +53,32 @@ CUSTOMERS_INFO_READER()
   then
     echo -e "\nI don't have a record for that phone number, what's your name?"
     read CUSTOMER_NAME
+
     # Customer info registration in 'customers'
     CUSTOMER_INFO_REGISTRATION_RESULT=$($PSQL "INSERT INTO customers(name, phone) VALUES('$CUSTOMER_NAME', '$CUSTOMER_PHONE')")
+  else
+    CUSTOMER_NAME=$($PSQL "SELECT name FROM customers WHERE phone = '$CUSTOMER_PHONE'")
   fi
 
   # This part of the code will be used to set appointment time
   SERVICE_NAME_RESULT=$($PSQL "SELECT name FROM services WHERE service_id = $SERVICE_ID_SELECTED")
-  echo -e "\nWhat time would you like your $SERVICE_NAME_RESULT, $CUSTOMER_NAME?"
+
+  SERVICE_NAME_FORMATTED_RESULT=$(echo $SERVICE_NAME_RESULT | sed 's/\s//g' -E)
+  CUSTOMER_NAME_FORMATTED=$(echo $CUSTOMER_NAME | sed 's/\s//g' -E)
+
+  echo -e "\nWhat time would you like your $SERVICE_NAME_FORMATTED_RESULT, $CUSTOMER_NAME_FORMATTED?"
   read SERVICE_TIME
 
   # Appointment info registration in 'customers'
   CUSTOMER_ID_RESULT=$($PSQL "SELECT customer_id FROM customers WHERE phone = '$CUSTOMER_PHONE'")
-  CUSTOMER_NAME_RESULT=$($PSQL "SELECT customer_id FROM customers WHERE phone = '$CUSTOMER_PHONE'")
   APPOINTMENT_INFO_REGISTRATION_RESULT=$($PSQL "INSERT INTO appointments(customer_id, service_id, time) VALUES($CUSTOMER_ID_RESULT, $SERVICE_ID_SELECTED, '$SERVICE_TIME')")
 
 
-  echo -e "\nI have put you down for a $SERVICE_NAME_RESULT at $SERVICE_TIME, $CUSTOMER_NAME.\n"
+  echo -e "\nI have put you down for a $SERVICE_NAME_FORMATTED_RESULT at $SERVICE_TIME, $CUSTOMER_NAME_FORMATTED.\n"
 }
 
 
-
-
 #####   MAIN PROGRAM   #####
-for i in 1 2
-do
-  WELCOME
-  SERVICES_PRINTER  # Will call SERVICES_CHOOSER until the input will be correct
-  CUSTOMERS_INFO_READER
-done
+WELCOME
+SERVICES_PRINTER  # Will call SERVICES_CHOOSER until the input will be correct
+CUSTOMERS_INFO_READER
